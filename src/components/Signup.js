@@ -8,6 +8,7 @@ import { AuthContext } from "./Auth";
 function Signup() {
 
     const [email, setEmail] = useState("");
+    const [emailerror,setEmailerror] = useState("");
     const [displayname, setDisplayname] = useState("");
     const [username, setUsername] = useState("");
     const [phone, setPhone] = useState("");
@@ -27,10 +28,15 @@ function Signup() {
                 setNow(false);
                 alert("User added Successfully")
                 firebaseApp.firestore().collection(user.user.uid).doc("profile").set({ Email: email, password: password, Displayname: displayname, PhoneNumber: phone,Username:username}).then(() => {
-                    firebaseApp.auth().signOut();
+                    
                     user.user.sendEmailVerification().then(() => {
                         alert("Verification Email is send");
-                        setRedirect(true)
+                        firebaseApp.firestore().collection("suggestions").doc(user.user.uid).set({Displayname:displayname,Username:username},{merge:true}).then(() => {
+                            setRedirect(true);    
+                            firebaseApp.auth().signOut();
+                        }).catch((err) => {
+                                setError(err.message);
+                            })
                     }).catch((err) => {
                         setError("Try after some time");
                         alert(err.message)
@@ -67,12 +73,11 @@ function Signup() {
             if (validator.isEmail(email)) {
                 var name   = email.substring(0, email.lastIndexOf("@"));
                 setUsername(name);
-                console.log(name);
-                document.getElementById("err").innerHTML = "✔";
+
+                setEmailerror("✔");
 
             } else {
-
-                document.getElementById("err").innerHTML = "✘";
+                setEmailerror("✘");
             }
         } else {
             setError("")
@@ -161,7 +166,7 @@ function Signup() {
                     <div className="field">
                         <input id="username" name="emailAdress" type="name" placeholder="Email" onKeyUp={emailchecker} onChange={(e) => setEmail(e.target.value)} />
                         <label htmlFor="username">Email</label>
-                        <h5 className="img" id="err"></h5>
+                        <h5 className="img" id="err">{emailerror}</h5>
                     </div>
                     <div className="field">
                         <input id="username" name="username" type="name" placeholder="Username" onKeyUp={namechecker} onChange={(e) => setDisplayname(e.target.value)} />
@@ -171,11 +176,13 @@ function Signup() {
                     <div className="field">
                         <input id="username" type="name" name="phone" placeholder="Phone number" onKeyUp={phonechecker} onChange={(e) => setPhone(e.target.value)} />
                         <label htmlFor="username">Phone number</label>
+           
                         <h5 className="img" id="err2"></h5>
                     </div>
                     <div className="field">
                         <input id="password" name="password" type="password" placeholder="Password" onKeyUp={passchecker} onChange={(e) => setPassword(e.target.value)} />
                         <label htmlFor="password">Password</label>
+                       
                         <h5 className="img" id="err3"></h5>
                     </div>
                     <div className="field">
